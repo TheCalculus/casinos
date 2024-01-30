@@ -4,7 +4,7 @@
     call print
     call print_nl
 
-    mov dx, 0xABCD
+    mov dx, 0xABCF
     
     call print_hex
     call print_nl
