@@ -4,9 +4,9 @@
     call print
     call print_nl
 
-    mov dx, 0xABCF
+    mov dx, 0xABCD
     
-    call print_hex
+    call print_hex ; print value in dx
     call print_nl
 
     jmp $
