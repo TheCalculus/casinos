@@ -44,9 +44,9 @@ loop:
 
     mov ax, dx
     shr dx, 4
-    and ax, 0x0F
+    and ax, 0x0f
 
-    cmp ax, 0xA
+    cmp ax, 0x0a
     
     jl letter
     add byte [bx], 7

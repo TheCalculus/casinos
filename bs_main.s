@@ -14,11 +14,9 @@
     
     call disk_load
 
-    mov dx, [0x9000]
+    mov dx, [0x7e00]
     call print_hex
-    
-    mov dx, [0x9000 + 512]
-    call print_hex
+    call print_nl
 
     jmp $
 
@@ -33,5 +31,4 @@ BOOT_DRIVE: db 0
 times 510-($-$$) db 0
 dw 0xaa55
 
-times 256 dw 0 xdada
-times 256 dw 0 xface
+times 256 dw 0x1234
