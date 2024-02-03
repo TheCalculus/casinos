@@ -12,6 +12,8 @@ start:
     jmp start
 
 done:
+    call print_nl
+
     popa
     ret
 
@@ -38,11 +40,13 @@ print_hex:
 loop:
     mov cl, dl
     cmp cl, 0
+    
     je end_loop
 
     and cl, 0x0f
-    cmp al, 0x0a
-    jle number
+    cmp cl, 0x0a
+
+    jl number
     jmp letter
 
 number:
@@ -50,20 +54,20 @@ number:
     jmp end_cmp
 
 letter:
-    add cl, 86
+;   add cl, 55 ; uppercase hexadecimal values
+    add cl, 87
     jmp end_cmp
 
 end_cmp:
     mov [bx], cl
-    
+
     sub bx, 1
     shr dx, 4
 
     jmp loop
-    
+
 end_loop:
     mov bx, HEX
-
     call print
 
     popa
