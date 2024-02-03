@@ -21,6 +21,7 @@ disk_load:
 disk_error:
     mov bx, DISK_ERR
     call print
+
     jmp $
 
 ; %include "bs_print.s"

@@ -1,14 +1,13 @@
 print:
     pusha
+    mov ah, 0x0e
 
 start:
     mov al, [bx]
     cmp al, 0
     je done
 
-    mov ah, 0x0e
     int 0x10
-
     inc bx
     jmp start
 
@@ -33,34 +32,38 @@ print_nl:
 print_hex:
     pusha
 
-    mov cx, 4
+    mov bx, HEX
+    add bx, 0x05
 
 loop:
-    dec cx
+    mov cl, dl
+    cmp cl, 0
+    je end_loop
 
-    mov bx, HEX
-    add bx, 2
-    add bx, cx
+    and cl, 0x0f
+    cmp al, 0x0a
+    jle number
+    jmp letter
 
-    mov ax, dx
-    shr dx, 4
-    and ax, 0x0f
-
-    cmp ax, 0x0a
-    
-    jl letter
-    add byte [bx], 7
-    jl letter
+number:
+    add cl, 48
+    jmp end_cmp
 
 letter:
-    add byte [bx], al
+    add cl, 86
+    jmp end_cmp
 
-    cmp cx, 0
-    je end
+end_cmp:
+    mov [bx], cl
+    
+    sub bx, 1
+    shr dx, 4
 
     jmp loop
+    
+end_loop:
+    mov bx, HEX
 
-end:
     call print
 
     popa
