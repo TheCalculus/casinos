@@ -13,8 +13,6 @@ print_loop:
     jmp print_loop
 
 end_print_loop:
-    call print_nl
-
     popa
     ret
 
@@ -27,6 +25,17 @@ print_nl:
     int 0x10
 
     mov al, 0x0d
+    int 0x10
+
+    popa
+    ret
+
+print__:
+    pusha
+    
+    mov ah, 0x0e
+    mov al, 0x20
+
     int 0x10
 
     popa

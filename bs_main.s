@@ -2,6 +2,7 @@
     mov bx, BOOT_MESSAGE
 
     call print
+    call print_nl
     
     mov [BOOT_DRIVE], dl
 
@@ -14,26 +15,44 @@
     
     call disk_load
 
-    mov cx, 512
-    mov dx, cx
+    mov cx, 511
+    mov bx, 0
 
-    call print_hex
-    call print_nl
+; hexdump-style printing of loaded disk content
+; %define DO_DISK_LOOP
+
+%ifdef DO_DISK_LOOP
 
 disk_loop:
     cmp cx, 0
-    je end_disk_loop
+    jl end_disk_loop
 
+    cmp bx, 8
+    jge sixteenth_row
+    jmp intermediate_row
+
+sixteenth_row:
+    mov bx, 0
+    call print_nl
+
+intermediate_row:
     mov si, cx
     shl si, 1
     mov dx, [0x9000 + si]
 
     call print_hex
+    call print__
 
     dec cx
+    inc bx
     jmp disk_loop
 
 end_disk_loop:
+
+%endif
+    call print_nl
+    call print_nl
+
     jmp $
 
 %include "bs_print.s"
