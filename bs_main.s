@@ -1,5 +1,3 @@
-; TODO: fix inconsistent naming convention for labels
-
 [org 0x7c00]
     mov bx, BOOT_MESSAGE
 
