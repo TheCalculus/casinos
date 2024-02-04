@@ -9,12 +9,16 @@ print_loop:
 
     int 0x10
 
-    inc bx
+    add bx, 1
     jmp print_loop
 
 end_print_loop:
     popa
     ret
+
+print_wnl:
+    call print
+    call print_nl
 
 print_nl:
     pusha
