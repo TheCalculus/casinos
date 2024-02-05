@@ -6,7 +6,6 @@
 switch_pm:
     mov bx, LOAD_GDT
     call print
-    call print_nl
 
     cli
     lgdt [gdt_descriptor]
@@ -14,13 +13,14 @@ switch_pm:
     mov eax, cr0
     or eax, 0x01
     mov cr0, eax
-
+  
     jmp CODE_SEG:start_pm
 
 [bits 32]
 
 start_pm:
     mov ax, DATA_SEG
+
     mov ds, ax
     mov ss, ax
     mov es, ax
