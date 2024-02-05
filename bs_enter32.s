@@ -4,12 +4,12 @@
 [bits 16]
 
 switch_pm:
-    cli
-    lgdt [gdt_descriptor]
-
     mov bx, LOAD_GDT
     call print
     call print_nl
+
+    cli
+    lgdt [gdt_descriptor]
 
     mov eax, cr0
     or eax, 0x01

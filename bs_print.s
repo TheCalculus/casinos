@@ -20,6 +20,8 @@ print_wnl:
     call print
     call print_nl
 
+    ret
+
 print_nl:
     pusha
     
