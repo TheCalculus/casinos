@@ -8,7 +8,8 @@ switch_pm:
     lgdt [gdt_descriptor]
 
     mov bx, LOAD_GDT
-    call print_wnl
+    call print
+    call print_nl
 
     mov eax, cr0
     or eax, 0x01
@@ -30,3 +31,5 @@ start_pm:
     mov esp, ebp
 
     call BEGIN_PM
+
+LOAD_GDT: db "loading the GDT", 0
