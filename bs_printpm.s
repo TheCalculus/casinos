@@ -16,7 +16,7 @@ print_pm_loop:
 
     mov [edx], ax
 
-    add ebx, 2
+    add ebx, 1
     add edx, 2
     
     jmp print_pm_loop

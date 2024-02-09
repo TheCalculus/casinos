@@ -4,12 +4,12 @@ print:
 
 print_loop:
     mov al, [bx]
-    cmp al, 0
-    je end_print_loop
-
     int 0x10
 
     add bx, 1
+    cmp al, 0
+
+    je end_print_loop
     jmp print_loop
 
 end_print_loop:

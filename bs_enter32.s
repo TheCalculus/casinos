@@ -7,6 +7,11 @@ switch_pm:
     mov bx, LOAD_GDT
     call print
 
+    mov ax, 2401
+    int 0x15
+    mov ax, 0x03
+    int 0x10
+
     cli
     lgdt [gdt_descriptor]
 
