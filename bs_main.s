@@ -1,6 +1,7 @@
 ; the casinos boot sector
-
 [org 0x7c00]
+KERNEL_OFFSET equ 0x1000
+    
     mov bp, 0x9000
     mov sp, bp
 
@@ -26,8 +27,13 @@
 os_boot:
     mov [BOOT_DRIVE], dl
 
-    mov bx, 0x9000
-    mov dh, 5
+    mov bp, 0x9000
+    mov sp, bp
+
+    ; kernel
+
+    mov bx, KERNEL_OFFSET
+    mov dh, 15
     mov dl, [BOOT_DRIVE]
 
     call disk_load
@@ -43,6 +49,13 @@ os_boot:
 BEGIN_PM:
     mov ebx, ENTER_32PM
     call print_pm
+
+    ; TODO: go to next row
+
+    mov ebx, BOOT_MESSAGE
+    call print_pm
+
+    call KERNEL_OFFSET
 
     jmp $
 

@@ -5,11 +5,12 @@ WHITE_ON_BLACK equ 0x0f
 
 print_pm:
     pusha
+
     mov edx, VIDEO_MEMORY
+    mov ah, WHITE_ON_BLACK
 
 print_pm_loop:
     mov al, [ebx]
-    mov ah, WHITE_ON_BLACK
 
     cmp al, 0
     je end_print_pm_loop
@@ -18,7 +19,7 @@ print_pm_loop:
 
     add ebx, 1
     add edx, 2
-    
+
     jmp print_pm_loop
 
 end_print_pm_loop:

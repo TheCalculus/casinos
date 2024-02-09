@@ -1,6 +1,13 @@
-build + run with command: `nasm main.s -f bin -o boot_sect.bin; qemu-system-x86_64 -nographic boot_sect.bin`  
-build + run with scripts (`chmod` for execution):  
-build: `./build.sh`  
-run: `./run.sh`  
+```
+build boot sector: nasm main.s -f bin -o boot_sect.bin
+'run' bare boot sector: qemu-system-x86_64 -fda boot_sect.bin
+build kernel entry: nasm enter_kernel.s -felf -o enter_kernel.o
+link kernel entry with kernel source: ld -o kernel.bin -m elf_i386 -Ttext 0x1000 enter_kernel.o kernel.o --oformat binary
+compile kernel source: gcc -ffreestanding -m32 -fno-pie -c kernel.c -o kernel.o
+construct kernel image: cat boot_sect.bin kernel.bin > os-image
+```
+  
+  
+makefile WIP
   
 https://www.cs.bham.ac.uk/~exr/lectures/opsys/10_11/lectures/os-dev.pdf
