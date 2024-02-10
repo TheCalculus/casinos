@@ -1,4 +1,3 @@
-SFLAGS=-fbin -felf
 CFLAGS=-c -ffreestanding -m32 -fno-pie
 LDFLAGS=-melf_i386 -Ttext 0x1000 --oformat binary
 
@@ -9,13 +8,13 @@ run: os-image
 	qemu-system-x86_64 -fda os-image
 
 os-image:
-	cat boot_sect.bin kernel.bin > $%
+	cat boot_sect.bin kernel.bin > $@
 
 enter_kernel.o: enter_kernel.s
-	nasm $(SFLAGS) $^ -o $%
+	nasm -felf $^ -o $@
 
 boot_sect.bin: bs_main.s
-	nasm $(SFLAGS) $^ -o $%
+	nasm -fbin $^ -o $@
 
 kernel.bin: enter_kernel.o $(.c=.o)
 	ld $(LDFLAGS) -o $@ $^

@@ -1,5 +1,5 @@
 ```
-build boot sector: nasm main.s -f bin -o boot_sect.bin
+build boot sector: nasm main.s -fbin -o boot_sect.bin
 'run' bare boot sector: qemu-system-x86_64 -fda boot_sect.bin
 build kernel entry: nasm enter_kernel.s -felf -o enter_kernel.o
 link kernel entry with kernel source: ld -o kernel.bin -m elf_i386 -Ttext 0x1000 enter_kernel.o kernel.o --oformat binary
