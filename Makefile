@@ -7,20 +7,20 @@ all: os-image
 run: os-image
 	qemu-system-x86_64 -fda os-image
 
-os-image:
-	cat boot_sect.bin kernel.bin > $@
-
-enter_kernel.o: enter_kernel.s
-	nasm -felf $^ -o $@
+os-image: boot_sect.bin kernel.bin
+	cat $^ > $@
 
 boot_sect.bin: bs_main.s
 	nasm -fbin $^ -o $@
 
-kernel.bin: enter_kernel.o $(.c=.o)
+kernel.bin: enter_kernel.o $(wildcard *.o)
 	ld $(LDFLAGS) -o $@ $^
+
+enter_kernel.o: enter_kernel.s
+	nasm -felf $^ -o $@
 
 %.o: %.c
 	gcc $(CFLAGS) $< -o $@
 
 clean:
-	rm -rf *.o
+	rm -rf *.o *.bin os-image
