@@ -46,7 +46,7 @@ BEGIN_PM:
     mov ebx, ENTER_32PM
     call print_pm
 
-;   call KERNEL_OFFSET
+    call KERNEL_OFFSET
 
     jmp $
 
