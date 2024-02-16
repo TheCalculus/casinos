@@ -1,26 +1,30 @@
 CFLAGS=-c -ffreestanding -m32 -fno-pie
 LDFLAGS=-melf_i386 -Ttext 0x1000 --oformat binary
 
+BOOTDIR=boot/
+KERNDIR=kernel/
+BUILDDIR=build/
+
 all: os-image
 
 # qemu -i386?
 run: os-image
 	qemu-system-x86_64 -fda os-image
 
-os-image: boot_sect.bin kernel.bin
+os-image: $(BUILDDIR)boot_sect.bin $(BUILDDIR)kernel.bin
 	cat $^ > $@
 
-boot_sect.bin: bs_main.s
-	nasm -fbin $^ -o $@
+$(BUILDDIR)boot_sect.bin: $(BOOTDIR)bs_main.s
+	nasm -i./$(BOOTDIR)/ -fbin $^ -o $@
 
-kernel.bin: enter_kernel.o $(wildcard *.o)
-	ld $(LDFLAGS) -o $@ $^
+$(BUILDDIR)enter_kernel.o: $(KERNDIR)enter_kernel.s
+	nasm -i./$(KERNDIR)/ -felf $^ -o $@
 
-enter_kernel.o: enter_kernel.s
-	nasm -felf $^ -o $@
-
-%.o: %.c
+$(BUILDDIR)%.o: $(KERNDIR)%.c
 	gcc $(CFLAGS) $< -o $@
 
+$(BUILDDIR)kernel.bin: $(BUILDDIR)enter_kernel.o $(patsubst $(KERNDIR)%.c, $(BUILDDIR)%.o, $(wildcard $(KERNDIR)*.c))
+	ld $(LDFLAGS) -o $@ $^
+
 clean:
-	rm -rf *.o *.bin os-image
+	rm -rf $(BUILDDIR)*.o $(BUILDDIR)*.bin $(BUILDDIR)os-image
