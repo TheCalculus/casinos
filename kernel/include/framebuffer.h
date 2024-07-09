@@ -7,6 +7,8 @@
 
 #define SCREEN_OFFSET(row, col) (row * MAX_COLS + col) * 2
 
-void print(char* string);
+void print(char* string, int x, int y);
+void printatcursor(char* string);
+void clearscr();
 
 #endif

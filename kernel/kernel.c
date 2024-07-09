@@ -1,6 +1,8 @@
-#include "screen.h"
+#include "include/framebuffer.h"
 
 int main() {
-    print("hello\nworld");
+    clearscr();
+    print("hello world!", 0, 0);
+
     return 0;
 }
