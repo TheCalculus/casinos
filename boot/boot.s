@@ -1,24 +1,6 @@
 [org 7c00h]
 [bits 16]
 
-jmp start
-
-dapack:     ; lba packet
-    db 10h  ; size
-    db 0
-sectors:
-    dw 4    ; number of sectors to transfer
-transfer:
-    dw 0    ; transfer buffer offset
-    dw 0    ; transfer buffer segment
-lba:
-    dd 0    ; lower 32-bits of 48-bit starting LBA
-    dd 0    ; upper 16-bits of 48-bit starting LBA
-
-drive db 0
-
-%include "print.s"
-
 start:
     cmp dl, 80h
     mov bx, dl_not_80h
@@ -55,19 +37,29 @@ error:
     call print
     jmp $
 
+%include "print.s"
+
+dapack: ; lba packet
+                    db 10h  ; size
+                    db 0
+sectors:            dw 4    ; number of sectors to transfer
+transfer:           dw 0    ; transfer buffer offset
+                    dw 0    ; transfer buffer segment
+lba:                dd 1    ; lower 32-bits of 48-bit starting LBA
+                    dd 0    ; upper 16-bits of 48-bit starting LBA
+
+drive               db 0    ; drive number is here
+
 dl_not_80h          db  "cmp dl, 80h", 0
 ext_test_failed     db  "bios extensions not supported", 0
 disk_read_failed    db  "disk read failed", 0
 volume_not_ext2     db  "volume is not ext2", 0
 stage_two_begin     db  "moving to stage2", 0
+info_block_size_kwn db  "block size figured out", 0
 
 times 510-($-$$) db 0
 dw 0xaa55
 
-block_size  db 0
-inode_table dd 0
-
-; stage1.5 like grub
 stage2:
     mov bx, stage_two_begin
     call print
@@ -77,9 +69,9 @@ stage2:
     mov bx, volume_not_ext2
     jne error
 
-    mov ax, [superblock + 24] ; (logged) block size
-    cmp ax, 0
+    mov ax, [superblock + 24] ; the number to shift 1,024 to the left by to obtain the block size
     mov bx, 1024
+    cmp ax, 0                 ; 1024 << 0 = 1024
     je block_size_1024        ; block size is 1024
 
     mov cl, al
@@ -90,9 +82,15 @@ block_size_1024:
     mov bx, 1024
 
 block_size_ukwn:
+    mov ax, bx
+    mov bx, info_block_size_kwn ; we figured out block size
+    call print
+    mov bx, ax
+
     ; get inode table and a pointer to it
     mov ax, [superblock + bx + 8]
     mov [inode_table], ax
+    jmp $
 
     mov [lba], ax
     mov ax, 2
@@ -103,19 +101,19 @@ block_size_ukwn:
 
     call read_disk
 
-    mov ax, 1280h                ; inode 5 is here
-    mov cx, [1280h + 28]         ; count of disk sectors
-    lea di, [1280h + 40]         ; direct block pointer 0
+    mov ax, 1200h                   ; inode 5 is here
+    mov cx, [1200h + 28]            ; count of disk sectors
+    lea di, [1200h + 40]            ; direct block pointer 0
 
 ; iterate through block pointers in bootloader to get stage 2
 
 begin_stage_two:
-    mov ax, [di]              ; load block pointer 0
-    shl ax, 1                 ; double it
+    mov ax, [di]                 ; load block pointer 0
+    shl ax, 1                    ; double it
 
-    mov [lba], ax             ; block pointer 0
-    mov bx, 5000h             ; destination address
-    mov [transfer], bx        ; load inode at 5000h
+    mov [lba], ax                ; block pointer 0
+    mov bx, 5000h                ; destination address
+    mov [transfer], bx           ; load inode at 5000h
 
     call read_disk
 
@@ -129,7 +127,6 @@ enable_a20:
     mov ax, 2401h
     int 15h
 
-%include "gdt.s"
 load_gdt:
     cli
     xor ax, ax
@@ -153,7 +150,12 @@ reload_cs:
     call ebx
     jmp $
 
-times 1024-($-$$) db 0
+%include "gdt.s"
+block_size          db  0
+inode_table         dd  0
 
+times 1022-($-$$) db 0
+db 0x69
+db 0x69
 superblock:
 ; link with stage 2

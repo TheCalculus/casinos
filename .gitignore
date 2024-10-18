@@ -1,5 +1,5 @@
 *.bin
 *.o
+*.ignore.s
 *.out
-build.sh
 build/
