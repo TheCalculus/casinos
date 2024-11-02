@@ -70,7 +70,7 @@ error:
 dapack:                                     ; lba packet
                     db 10h                  ; size
                     db 0
-sectors:            dw 4                    ; number of sectors to transfer
+sectors:            dw 2                    ; number of sectors to transfer
 transfer:           dw 0                    ; transfer buffer offset
                     dw 0                    ; transfer buffer segment
 lba:                dd 1                    ; lower 32-bits of 48-bit starting LBA
@@ -90,44 +90,42 @@ stage2:
     mov bx, ERROR_VOLUME_NOT_EXT2
     jne error
 
+ext2_block_size: dw 0
+ext2_blgrp_table: dw 0
+
     mov ax, [superblock + 24]               ; the number to shift 1,024 to the left by to obtain the block size
-    mov bx, 1024
+    mov bx, 1024                            ; bx will have block size
     cmp ax, 0                               ; 1024 << 0 = 1024
     je block_size_1024                      ; block size is 1024
 
     mov cl, al
     shl bx, cl                              ; 1024 << ax gives block size
-    jmp block_size_ukwn                     ; block size is not 1024
+    mov [ext2_block_size], bx               ; get block size in bx
+    mov ax, 1                               ; move value for ext2_blgrp_table into ax
+    jmp done
 
 block_size_1024:
-    mov bx, 1024
+    mov ax, 2
 
-ext2_block_size: dw 0
-block_size_ukwn:
-    mov [ext2_block_size], bx               ; move block size into memory
+done:
+    mov [ext2_blgrp_table], ax
     mov bx, INFO_BLOCK_SIZE                 ; we figured out block size
     call print
 
-    xor dx, dx
-    mov ax, [ext2_block_size]               ; prepare ax = block size / 512
-    mov cx, 512                             ; assume sector size to be 512
-    div cx                                  ; ax / 512 gives sectors
-
+    mov ax, [ext2_blgrp_table]              ; ax = ext2_blgrp_table = ax (FIXME)
     mov [lba], ax                           ; lba of block group descriptor table
+    mov ax, 2                               ; read 1 sector (512 bytes)
+    mov bx, 1000h                           ; into 1000h
 
-    mov bx, 2                               ; read 1 sector (512 bytes)
-    mov [sectors], bx
-    mov ax, 1000h                           ; into 1000h
-    mov [transfer], ax
+    mov [sectors], ax
+    mov [transfer], bx
     call read_disk                          ; read block group descriptor table
 
     mov bx, INFO_BGD_TABLE_LOADED
     call print
 
-    ; FIXME doesn't load stage 2
-
-    mov cx, [1288h + 28]                    ; 1288h is starting block address of inode table
-    lea di, [1288h + 40]
+    mov cx, [1200h + 28]                    ; 1288h is starting block address of inode table
+    lea di, [1200h + 40]
 
 begin_stage_two:
     ; iterate block pointers to get stage 2
