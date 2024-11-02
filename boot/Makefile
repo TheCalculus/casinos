@@ -1,3 +1,6 @@
+# qemu might require -display curses instead of -curses
+DISPLAY_CURSES := -display curses 
+
 boot: boot.s disk.img
 	nasm boot.s -o boot
 	dd if=boot of=disk.img conv=notrunc
@@ -7,10 +10,10 @@ disk.img:
 	sudo mke2fs disk.img
 
 run: boot disk.img
-	qemu-system-i386 -curses -hda disk.img
+	qemu-system-i386 $(DISPLAY_CURSES) -hda disk.img
 
 runss: boot disk.img
-	qemu-system-i386 -s -S -curses -hda disk.img
+	qemu-system-i386 -s -S -$(DISPLAY_CURSES) -hda disk.img
 
 debug: disk.img
 	gdb -ex "target remote localhost:1234"
