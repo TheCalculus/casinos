@@ -67,3 +67,31 @@ end_print_hex_loop:
     ret
 
 HEX: db "0x0000", 0
+
+PrintHex:
+    pusha
+    mov cx, 4
+    mov bx, dx
+    
+PrintHexDigit:
+    shl bx, 4
+    mov al, bh 
+    and al, 0Fh
+    cmp al, 9
+    jbe PrintDigit
+    
+    add al, 'A' - 10
+    jmp Output
+    
+PrintDigit:
+    add al, '0'
+    
+Output:
+    mov ah, 0Eh
+    int 10h
+    
+    loop PrintHexDigit
+    call print
+
+    popa
+    ret

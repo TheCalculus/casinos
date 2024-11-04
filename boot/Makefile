@@ -1,5 +1,11 @@
 # qemu might require -display curses instead of -curses
 DISPLAY_CURSES := -display curses 
+CC_COMPILE_FLAGS := -w -fno-pic -fno-builtin -nostdlib -ffreestanding -std=gnu99 -m32 -c
+
+boot2: disk.img
+	gcc $(CC_COMPILE_FLAGS) *.c -o boot2.o
+	ld -m elf_i386 -N -e main -Ttext 0x00050000 -o boot2 boot2.o --oformat binary
+	dd if=boot2 of=disk.img conv=notrunc
 
 boot: boot.s disk.img
 	nasm boot.s -o boot

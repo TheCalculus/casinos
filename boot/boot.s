@@ -26,6 +26,7 @@ ERROR_VOLUME_NOT_EXT2                 db    "volume is not ext2", 0
 INFO_STAGE2_INIT                      db    "moving to stage2", 0
 INFO_BLOCK_SIZE                       db    "block size figured out", 0
 INFO_BGD_TABLE_LOADED                 db    "block group descriptor table loaded", 0
+INFO_STAGE2_LOADED                    db    "stage 2 just fucking loaded", 0
 
 SUCCESS_BOOT                          db    "boot was successful", 0
 
@@ -114,39 +115,48 @@ done:
 
     mov ax, [ext2_blgrp_table]              ; ax = ext2_blgrp_table = ax (FIXME)
     mov [lba], ax                           ; lba of block group descriptor table
-    mov ax, 2                               ; read 1 sector (512 bytes)
-    mov bx, 1000h                           ; into 1000h
 
+    mov ax, 1                               ; read 1 sector (512 bytes)
     mov [sectors], ax
+
+    mov bx, 1000h                           ; into 1000h
     mov [transfer], bx
+
     call read_disk                          ; read block group descriptor table
 
     mov bx, INFO_BGD_TABLE_LOADED
     call print
 
-    mov cx, [1200h + 28]                    ; 1288h is starting block address of inode table
     lea di, [1200h + 40]
+    lea ax, [di]                            ; set ax = block pointer
 
-begin_stage_two:
-    ; iterate block pointers to get stage 2
+    mov cx, 12                              ; # of direct block pointers
+    mov bx, 5000h                           ; set transfer buffer to 00050000h
+	mov [transfer + 2], bx
+	mov bx, 0
+    mov [transfer], bx
 
-    mov ax, [di]                            ; load block pointer 0
-    mov [lba], ax                           ; block pointer 0
-    mov bx, 5000h                           ; destination address
-    mov [transfer], bx                      ; load inode at 5000h
+begin_stage_two:                            ; iterate block pointers to get stage 2
+    mov [lba], ax
+    mov [transfer], bx
 
     call read_disk
 
-    add bx, 400h
-	add di, 4h
-	sub cx, 2h
-	
-    jnz begin_stage_two
+    add bx, 400h                            ; increase by 2 * 512
+    add ax, 4                               ; move to next block pointer
+    
+    dec cx
+    cmp cx, 0
+    jne begin_stage_two
 
 enable_a20:
+    mov bx, INFO_STAGE2_LOADED
+    call print
+    
     mov ax, 2401h
     int 15h
 
+%include "gdt.s"
 load_gdt:
     cli
     xor ax, ax
@@ -154,25 +164,23 @@ load_gdt:
     lgdt [gdt_descriptor]
     
     mov eax, cr0
-    or eax, 01h
+    or eax, 1
     mov cr0, eax
 
 [bits 32]
-    jmp 08h:reload_cs
+    jmp CODE_SEG:reload_cs
 reload_cs:
-    mov ax, 08h
+    mov ax, DATA_SEG
     mov ds, ax
     mov ss, ax
 
     mov esp, 090000h
-    mov eax, 5000h
+    mov eax, 00050000h
     lea ebx, [eax]
-    call ebx
     jmp $
+    call ebx
 
-%include "gdt.s"
-block_size          db  0
-inode_table         dd  0
+    jmp $
 
 times 1022-($-$$) db 0
 dw 0x6969
