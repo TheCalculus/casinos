@@ -141,7 +141,6 @@ begin_stage_two:                            ; iterate block pointers to get stag
     mov [transfer], bx
 
     call read_disk
-
     add bx, 400h                            ; increase by 2 * 512
     add ax, 4                               ; move to next block pointer
     
