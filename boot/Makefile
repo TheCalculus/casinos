@@ -1,38 +1,44 @@
-# qemu might require -display curses instead of -curses
-DISPLAY_CURSES := -display curses 
+QEMU := qemu-system-i386
+DISPLAY_CURSES := -display curses
+CC := gcc
+NASM := nasm
+GDB := gdb
+
 CC_COMPILE_FLAGS := -w -fno-pic -fno-builtin -nostdlib -ffreestanding -std=gnu99 -m32 -c
+NASM_FLAGS := -f bin
 
-# boot2: disk.img
-# 	gcc $(CC_COMPILE_FLAGS) *.c -o boot2.o
-# 	ld -m elf_i386 -N -e main -Ttext 0x00050000 -o boot2 boot2.o --oformat binary
-# 	dd if=boot2 of=disk.img conv=notrunc
+BOOT_BIN := boot
+STAGE2_BIN := stage2
+DISK_IMG := disk.img
 
-stage2: stage2.s
-	nasm stage2.s -o stage2
+.PHONY: all clean reset run debug
 
-boot: boot.s
-	nasm boot.s -o boot
+all: $(DISK_IMG)
 
-disk.img: boot stage2
-	dd if=/dev/zero of=disk.img bs=1k count=16k
-	sudo mke2fs disk.img
-	dd if=boot of=disk.img conv=notrunc
-	dd if=stage2 of=disk.img seek=2 conv=notrunc
+$(STAGE2_BIN): stage2.s
+	$(NASM) $(NASM_FLAGS) stage2.s -o $(STAGE2_BIN)
 
-run: disk.img
-	qemu-system-i386 $(DISPLAY_CURSES) -hda disk.img
+$(BOOT_BIN): boot.s
+	$(NASM) $(NASM_FLAGS) boot.s -o $(BOOT_BIN)
 
-runss: disk.img
-	qemu-system-i386 -s -S -$(DISPLAY_CURSES) -hda disk.img
+$(DISK_IMG): $(BOOT_BIN) $(STAGE2_BIN)
+	dd if=/dev/zero of=$(DISK_IMG) bs=1k count=16k
+	sudo mke2fs $(DISK_IMG)
+	dd if=$(BOOT_BIN) of=$(DISK_IMG) conv=notrunc
+	dd if=$(STAGE2_BIN) of=$(DISK_IMG) seek=2 conv=notrunc
 
-debug: disk.img
-	gdb -ex "target remote localhost:1234"
+run: $(DISK_IMG)
+	$(QEMU) $(DISPLAY_CURSES) -hda $(DISK_IMG)
 
-reset:
-	rm boot
-	rm stage2
-	rm disk.img
+runss: $(DISK_IMG)
+	$(QEMU) -s -S $(DISPLAY_CURSES) -hda $(DISK_IMG)
+
+debug: $(DISK_IMG)
+	$(GDB) -ex "target remote localhost:1234"
 
 clean:
-	rm boot
-	rm stage2
+	rm -f $(BOOT_BIN) $(STAGE2_BIN)
+
+reset: clean
+	rm -f $(DISK_IMG)
+
