@@ -1,6 +1,5 @@
-.= 0x7c00
 .code16
-
+.global _start
 _start:
     movw $1, %es:(%di)
     xor %ebx, %ebx

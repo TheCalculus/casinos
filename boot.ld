@@ -1,13 +1,19 @@
-/* ENTRY(_start) */
-TARGET(binary)
+ENTRY(_start)
 OUTPUT_FORMAT(elf32-i386)
+INPUT(boot.o)
+OUTPUT(boot.elf)
+TARGET(binary)
 
 SECTIONS
 {
     . = 0x7c00;
-    .boot : AT(0x7c00) SUBALIGN(4)
-    {
-        boot.o(.text)
-        boot.o(.*)
+
+    .boot (READONLY) : ALIGN(512) {
+        _BOOT_START_ = .;
+        *(.text)
+        _BOOT_END_ = .;
     }
+
+    . = 0x7c00 + 512;
+    .magic = 0xaa55;
 }
