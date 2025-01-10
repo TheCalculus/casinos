@@ -8,12 +8,15 @@ SECTIONS
 {
     . = 0x7c00;
 
-    .boot (READONLY) : ALIGN(512) {
+    .boot (READONLY) : ALIGN(510) {
         _BOOT_START_ = .;
         *(.text)
         _BOOT_END_ = .;
     }
 
-    . = 0x7c00 + 512;
-    .magic = 0xaa55;
+     . += (0x7c00 + 510) - .;
+
+    .magic : {
+        SHORT(0xaa55)
+    }
 }
