@@ -1,3 +1,19 @@
+.align 16
+
+dapack:
+    .byte 0x10
+    .byte 0
+.sectors:
+    .word 16
+.transfer:
+    .long 0
+.lba:
+    .long 0
+    .long 0
+drive:
+    .byte 0
+
+.set stage2_load, 0x10000
 .set multiboot_info, 0x7000
 .set e820_map, multiboot_info + 52
 
@@ -5,6 +21,7 @@
 .global _start
 _start:
     testb $0x80, %dl
+    movb drive, %dl
 
     xorw %ax, %ax
     movw %ax, %ds
@@ -54,9 +71,20 @@ e820.iter:
     int $0x15
     test %ebx, %ebx
     jne e820.iter
-    jmp e820.finish
 e820.failed:
+    hlt
 e820.finish:
+
+diskread:
+    movw dapack, %si
+    movb $0x42, %ah
+    movb drive, %dl
+    int $0x13
+    jc diskread.failed
+    ret
+diskread.failed:
+    movl $0xb, %eax
+    hlt
 
 stage2:
     movb $0x41, %ah
@@ -64,9 +92,10 @@ stage2:
     movb $0x80, %dl
     int $0x13
     jne stage2.no41
-
-    ; TODO: dapack
-
-stage2.no41
+    movl $stage2_load, .transfer
+    call diskread
+    
+stage2.no41:
+    hlt
 
 .code32
