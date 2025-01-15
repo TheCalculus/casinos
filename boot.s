@@ -1,27 +1,14 @@
-.align 16
-
-dapack:
-    .byte 0x10
-    .byte 0
-.sectors:
-    .word 16
-.transfer:
-    .long 0
-.lba:
-    .long 0
-    .long 0
-drive:
-    .byte 0
-
-.set stage2_load, 0x10000
-.set multiboot_info, 0x7000
-.set e820_map, multiboot_info + 52
-
 .code16
+
+.section .text
 .global _start
+.type _start, @function
 _start:
-    testb $0x80, %dl
-    movb drive, %dl
+    cmpb $0x80, %dl
+    jge .dl80
+    hlt
+.dl80:
+    movb %dl, drive
 
     xorw %ax, %ax
     movw %ax, %ds
@@ -29,8 +16,8 @@ _start:
     movw %ax, %ss
 
 a20:
-    mov $0x696969, %edi
-    mov $0x096969, %esi
+    mov $0x112345, %edi
+    mov $0x012345, %esi
     mov (%esi), %esi
     mov (%edi), %edi
     cmpsl
@@ -48,6 +35,62 @@ a20.no92:
     movw $0x2401, %ax
     int $0x15
 a20.finish:
+
+print:
+    pusha
+    mov $0x0e, %ah
+print.next:
+    lodsb
+    testb %al, %al
+    je print.done
+    int $0x10
+    jmp print.next
+print.done:
+    popa
+    ret
+
+.global diskread
+.type diskread, @function
+diskread:
+    pusha
+    movb $0x42, %ah
+    lea dapack, %si
+    movb drive, %dl
+    int $0x13
+    jc diskread.failed
+    jmp diskread.done
+diskread.failed:
+    lea err_diskread, %si
+    call print
+diskread.done:
+    popa
+    ret
+
+hexprint:
+    pusha
+    movw %ax, %bx
+    movw $hex_buffer, %di
+    movb $4, %cl
+hexprint.next:
+    rolw $4, %bx
+    movb %bl, %al
+    andb $0x0F, %al
+    cmpb $10, %al
+    jl hexprint.number
+    addb $'A' - 10, %al
+    jmp hexprint.done
+hexprint.number:
+    addb $'0', %al
+hexprint.done:
+    stosb
+    decb %cl
+    jnz hexprint.next
+    movb $0, %al
+    stosb
+    lea hex_buffer, %si
+    call print
+    popa
+    ret
 
 e820:
     movl $e820_map, %ebx
@@ -75,27 +118,51 @@ e820.failed:
     hlt
 e820.finish:
 
-diskread:
-    movw dapack, %si
-    movb $0x42, %ah
-    movb drive, %dl
-    int $0x13
-    jc diskread.failed
-    ret
-diskread.failed:
-    movl $0xb, %eax
-    hlt
-
 stage2:
     movb $0x41, %ah
     movw $0x55aa, %bx
-    movb $0x80, %dl
     int $0x13
     jne stage2.no41
-    movl $stage2_load, .transfer
     call diskread
-    
+    jmp stage2.load
 stage2.no41:
-    hlt
+    lea err_no41, %si
+    call print
+stage2.load:
+    movl $0x6969, %eax
+    call hexprint
+    movl $2, .lba
+    .extern stage2_main
+    call stage2_main
 
-.code32
+.data
+
+.set stage2_load, 0x1000
+.set multiboot_info, 0x7000
+.set e820_map, multiboot_info + 52
+
+.align 16
+dapack:
+    .byte 0x10
+    .byte 0
+.sectors:
+    .short 1
+.transfer:
+    .long 0x00007c00
+.lba:
+    .long 0
+    .long 0
+
+drive:
+    .byte 0
+
+.align 16
+hex_buffer:
+    .space 5
+
+// strerrors
+err_diskread:
+    .asciz "disk read failed\n\r"
+
+err_no41:
+    .asciz "stage2 no 41\n\r"

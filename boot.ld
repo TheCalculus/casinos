@@ -1,8 +1,7 @@
+INPUT(boot.o stage2.o)
+OUTPUT(boot.bin)
+OUTPUT_FORMAT(binary)
 ENTRY(_start)
-OUTPUT_FORMAT(elf32-i386)
-INPUT(boot.o)
-OUTPUT(boot.elf)
-TARGET(binary)
 
 SECTIONS
 {
@@ -11,6 +10,7 @@ SECTIONS
     .boot (READONLY) : ALIGN(510) {
         _BOOT_START_ = .;
         *(.text)
+        *(.data)
         _BOOT_END_ = .;
     }
 
@@ -18,5 +18,14 @@ SECTIONS
 
     .magic : {
         SHORT(0xaa55)
+    }
+
+    . += (0x7c00 + 512) - .;
+
+    .stage2 (READONLY) : {
+        _STAGE2_START_ = .;
+        *(.text)
+        *(.data)
+        _STAGE2_END_ = .;
     }
 }
