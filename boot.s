@@ -36,21 +36,6 @@ a20.no92:
     int $0x15
 a20.finish:
 
-print:
-    pusha
-    mov $0x0e, %ah
-print.next:
-    lodsb
-    testb %al, %al
-    je print.done
-    int $0x10
-    jmp print.next
-print.done:
-    popa
-    ret
-
-.global diskread
-.type diskread, @function
 diskread:
     pusha
     movb $0x42, %ah
@@ -66,6 +51,20 @@ diskread.done:
     popa
     ret
 
+print:
+    pusha
+    mov $0x0e, %ah
+print.next:
+    lodsb
+    testb %al, %al
+    je print.done
+    int $0x10
+    jmp print.next
+print.done:
+    popa
+    ret
+
+.global hexprint
 hexprint:
     pusha
     movw %ax, %bx
@@ -93,7 +92,7 @@ hexprint.done:
     ret
 
 e820:
-    movl $e820_map, %ebx
+    movl $.e820_map_addr, %ebx
     movl %ebx, %edi
     xor %ebx, %ebx
     xor %bp, %bp
@@ -129,17 +128,14 @@ stage2.no41:
     lea err_no41, %si
     call print
 stage2.load:
-    movl $0x6969, %eax
-    call hexprint
-    movl $2, .lba
-    .extern stage2_main
-    call stage2_main
+    call .stage2_load_addr
+    hlt
 
 .data
 
-.set stage2_load, 0x1000
-.set multiboot_info, 0x7000
-.set e820_map, multiboot_info + 52
+.set .stage2_load_addr,     0x1000
+.set .multiboot_info_addr,  0x7000
+.set .e820_map_addr,        .multiboot_info_addr + 52
 
 .align 16
 dapack:
@@ -148,9 +144,10 @@ dapack:
 .sectors:
     .short 1
 .transfer:
-    .long 0x00007c00
+    .word .stage2_load_addr
+    .word 0
 .lba:
-    .long 0
+    .long 1
     .long 0
 
 drive:
