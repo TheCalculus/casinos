@@ -4,7 +4,7 @@ boot.o: boot.s
 	as --32 boot.s -o boot.o
 
 stage2.o: stage2.c
-	gcc -fno-pie -fno-builtin -nostdlib -ffreestanding -std=gnu99 -m32 -e stage2_main -c stage2.c -o stage2.o
+	gcc -fno-pic -fno-builtin -nostdlib -ffreestanding -std=gnu99 -m32 -e stage2_main -c stage2.c -o stage2.o
 
 boot.bin: boot.ld boot.o stage2.o
 	ld -m elf_i386 -T boot.ld

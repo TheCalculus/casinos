@@ -11,7 +11,7 @@ SECTIONS
     {
         boot.o(.text)
         boot.o(.data)
-        . = 0x1fe;
+        . = 0x1be;
         SHORT(0xaa55)
     } = 0
 

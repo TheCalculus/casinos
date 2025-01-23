@@ -6,9 +6,9 @@
 _start:
     cmpb $0x80, %dl
     jge .dl80
-    hlt
 .dl80:
-    movb %dl, drive
+    movb %dl, .drive
+    movb $.drive, %dl
 
     xorw %ax, %ax
     movw %ax, %ds
@@ -40,7 +40,7 @@ diskread:
     pusha
     movb $0x42, %ah
     lea dapack, %si
-    movb drive, %dl
+    movb $.drive, %dl
     int $0x13
     jc diskread.failed
     jmp diskread.done
@@ -51,6 +51,7 @@ diskread.done:
     popa
     ret
 
+.global print
 print:
     pusha
     mov $0x0e, %ah
@@ -64,7 +65,6 @@ print.done:
     popa
     ret
 
-.global hexprint
 hexprint:
     pusha
     movw %ax, %bx
@@ -87,6 +87,8 @@ hexprint.done:
     movb $0, %al
     stosb
     lea hex_buffer, %si
+    call print
+    lea new_line, %si
     call print
     popa
     ret
@@ -133,6 +135,7 @@ stage2.load:
 
 .data
 
+.set .drive,                0x80
 .set .stage2_load_addr,     0x1000
 .set .multiboot_info_addr,  0x7000
 .set .e820_map_addr,        .multiboot_info_addr + 52
@@ -150,16 +153,10 @@ dapack:
     .long 1
     .long 0
 
-drive:
-    .byte 0
-
 .align 16
-hex_buffer:
-    .space 5
+hex_buffer:   .space 5
 
+new_line:     .asciz "\n\r"
 // strerrors
-err_diskread:
-    .asciz "disk read failed\n\r"
-
-err_no41:
-    .asciz "stage2 no 41\n\r"
+err_diskread: .asciz "disk read failed\n\r"
+err_no41:     .asciz "stage2 no 41\n\r"
