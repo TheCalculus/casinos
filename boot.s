@@ -36,6 +36,8 @@ a20.no92:
     int $0x15
 a20.finish:
 
+.global diskread
+.type diskread, @function
 diskread:
     pusha
     movb $0x42, %ah
@@ -52,6 +54,7 @@ diskread.done:
     ret
 
 .global print
+.type print, @function
 print:
     pusha
     mov $0x0e, %ah
@@ -136,7 +139,7 @@ stage2.load:
 .data
 
 .set .drive,                0x80
-.set .stage2_load_addr,     0x1000
+.set .stage2_load_addr,     0x7e00
 .set .multiboot_info_addr,  0x7000
 .set .e820_map_addr,        .multiboot_info_addr + 52
 

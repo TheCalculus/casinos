@@ -11,13 +11,22 @@ SECTIONS
     {
         boot.o(.text)
         boot.o(.data)
-        . = 0x1be;
+        . = 510;
         SHORT(0xaa55)
-    } = 0
-
-    .text :
-    {
+        . = 512;
         stage2.o(.text)
         stage2.o(.data)
     } = 0
+
+    /DISCARD/ :
+    {
+        *(.bss)
+        *(.rodata)
+        *(.eh_frame)
+        *(.rela.eh_frame)
+        *(.comment)
+        *(.note.gnu.property)
+        *(.note.GNU-stack)
+        *(.dynamic)
+    }
 }
