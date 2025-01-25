@@ -1,40 +1,9 @@
 .code16
 
 .section .text
+
 .global _start
-.type _start, @function
-_start:
-    cmpb $0x80, %dl
-    jge .dl80
-.dl80:
-    movb %dl, .drive
-    movb $.drive, %dl
-
-    xorw %ax, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %ss
-
-a20:
-    mov $0x112345, %edi
-    mov $0x012345, %esi
-    mov (%esi), %esi
-    mov (%edi), %edi
-    cmpsl
-    jne a20.set
-    jmp e820
-a20.set:
-    inb $0x92, %al
-    testb $02, %al
-    jnz a20.no92
-    orb $2, %al
-    andb $0xfe, %al
-    outb %al, $0x92
-    jmp a20.finish
-a20.no92:
-    movw $0x2401, %ax
-    int $0x15
-a20.finish:
+jmp _start
 
 .global diskread
 .type diskread, @function
@@ -96,6 +65,53 @@ hexprint.done:
     popa
     ret
 
+_start:
+    lea msg_hello, %si
+    call print
+
+    cmpb $0x80, %dl
+    jge .dl80
+.dl80:
+    movb %dl, .drive
+    movb $.drive, %dl
+
+    lea msg_hdd, %si
+    call print
+
+    cli
+    cld
+    ljmp $0x0000, $.initcs
+.initcs:
+    xorw %si, %si
+    movw %si, %di
+    movw %si, %es
+    movw %si, %ss
+    movw $0x7c00, %sp
+    sti
+
+a20:
+    mov $0x112345, %edi
+    mov $0x012345, %esi
+    mov (%esi), %esi
+    mov (%edi), %edi
+    cmpsl
+    jne a20.set
+    jmp a20.finish
+a20.set:
+    inb $0x92, %al
+    testb $02, %al
+    jnz a20.no92
+    orb $2, %al
+    andb $0xfe, %al
+    outb %al, $0x92
+    jmp a20.finish
+a20.no92:
+    movw $0x2401, %ax
+    int $0x15
+a20.finish:
+    lea msg_a20, %si
+    call print
+
 e820:
     movl $.e820_map_addr, %ebx
     movl %ebx, %edi
@@ -121,6 +137,8 @@ e820.iter:
 e820.failed:
     hlt
 e820.finish:
+    lea msg_e820, %si
+    call print
 
 stage2:
     movb $0x41, %ah
@@ -159,6 +177,10 @@ dapack:
 .align 16
 hex_buffer:   .space 5
 
+msg_hello:    .asciz "casinoboot: gambling with your hardrive\n\r"
+msg_hdd:      .asciz "booting from hard drive %dl > 80\n\r"
+msg_a20:      .asciz "TODO: handle a20 success/error\n\r"
+msg_e820:     .asciz "e820 memory map loaded\n\r"
 new_line:     .asciz "\n\r"
 // strerrors
 err_diskread: .asciz "disk read failed\n\r"

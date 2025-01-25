@@ -16,12 +16,12 @@ SECTIONS
         . = 512;
         stage2.o(.text)
         stage2.o(.data)
+        stage2.o(.rodata)
     } = 0
 
     /DISCARD/ :
     {
         *(.bss)
-        *(.rodata)
         *(.eh_frame)
         *(.rela.eh_frame)
         *(.comment)
