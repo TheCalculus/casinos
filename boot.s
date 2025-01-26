@@ -1,8 +1,6 @@
-.code16
+    .text
+    .code16
 
-.section .text
-
-.global _start
 jmp _start
 
 .global diskread
@@ -65,6 +63,7 @@ hexprint.done:
     popa
     ret
 
+.global _start
 _start:
     lea msg_hello, %si
     call print
@@ -86,7 +85,7 @@ _start:
     movw %si, %di
     movw %si, %es
     movw %si, %ss
-    movw $0x7c00, %sp
+    movw $.stage1_load_addr, %sp
     sti
 
 a20:
@@ -154,11 +153,15 @@ stage2.load:
     call .stage2_load_addr
     hlt
 
-.data
+    .data
 
+.extern _sboot
+.extern _sboot2
+.set .stage1_load_addr,     _sboot
+.set .stage2_load_addr,     _sboot2
 .set .drive,                0x80
-.set .stage2_load_addr,     0x7e00
 .set .multiboot_info_addr,  0x7000
+.extern .e820_map_addr
 .set .e820_map_addr,        .multiboot_info_addr + 52
 
 .align 16

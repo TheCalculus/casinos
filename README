@@ -1,0 +1,11 @@
+casinoboot
+
+done
+- segment registers & stack
+- extended disk read
+
+doing
+- robust a20 enable
+- memory map
+
+todo
