@@ -35,6 +35,8 @@ print.done:
     popa
     ret
 
+.global hexprint
+.type hexprint, @function
 hexprint:
     pusha
     movw %ax, %bx
@@ -112,7 +114,7 @@ a20.finish:
     call print
 
 e820:
-    movl $.e820_map_addr, %ebx
+    movl $_e820_map_addr, %ebx
     movl %ebx, %edi
     xor %ebx, %ebx
     xor %bp, %bp
@@ -160,9 +162,10 @@ stage2.load:
 .set .stage1_load_addr,     _sboot
 .set .stage2_load_addr,     _sboot2
 .set .drive,                0x80
-.set .multiboot_info_addr,  0x7000
-.extern .e820_map_addr
-.set .e820_map_addr,        .multiboot_info_addr + 52
+.global _multiboot_info_addr
+.global _e820_map_addr
+.set _multiboot_info_addr,  0x7000
+.set _e820_map_addr,        _multiboot_info_addr + 52
 
 .align 16
 dapack:

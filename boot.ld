@@ -1,7 +1,5 @@
-INPUT(boot.o stage2.o)
 ENTRY(_start)
 OUTPUT_FORMAT(binary)
-OUTPUT(boot.bin)
 
 SECTIONS
 {
@@ -10,8 +8,8 @@ SECTIONS
     .boot :
     {
         _sboot = .;
-        boot.o(.text)
-        boot.o(.data)
+        build/boot.o(.text)
+        build/boot.o(.data)
         . = 510;
         SHORT(0xaa55)
         _eboot = .;
@@ -22,9 +20,9 @@ SECTIONS
     .stage2 :
     {
         _sboot2 = .;
-        stage2.o(.text)
-        stage2.o(.data)
-        stage2.o(.rodata)
+        build/stage2.o(.text)
+        build/stage2.o(.data)
+        build/stage2.o(.rodata)
         _eboot2 = .;
     } = 0
 
