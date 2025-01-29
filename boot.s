@@ -1,10 +1,14 @@
     .text
     .code16
+    .global _start
+    .type   _start, @function
 
-jmp _start
+call _start
+.hlt: hlt
+jmp .hlt
 
-.global diskread
-.type diskread, @function
+    .global diskread
+    .type   diskread, @function
 diskread:
     pusha
     movb $0x42, %ah
@@ -20,8 +24,8 @@ diskread.done:
     popa
     ret
 
-.global print
-.type print, @function
+    .global print
+    .type   print, @function
 print:
     pusha
     mov $0x0e, %ah
@@ -35,8 +39,8 @@ print.done:
     popa
     ret
 
-.global hexprint
-.type hexprint, @function
+    .global hexprint
+    .type   hexprint, @function
 hexprint:
     pusha
     movw %ax, %bx
@@ -65,7 +69,6 @@ hexprint.done:
     popa
     ret
 
-.global _start
 _start:
     lea msg_hello, %si
     call print
@@ -113,60 +116,30 @@ a20.finish:
     lea msg_a20, %si
     call print
 
-e820:
-    movl $_e820_map_addr, %ebx
-    movl %ebx, %edi
-    xor %ebx, %ebx
-    xor %bp, %bp
-    movl $0x534D4150, %edx
-    movl $0xe820, %eax
-    movl 24, %ecx
-    int $0x15
-    jc e820.failed
-    movl $0x0534D4150, %edx
-    cmpl %eax, %edx
-    jne e820.failed
-    test %ebx, %ebx
-    je e820.failed
-e820.iter:
-    movl $0xe820, %eax
-    movl $24, %ecx
-    addl $24, %edi
-    int $0x15
-    test %ebx, %ebx
-    jne e820.iter
-e820.failed:
-    hlt
-e820.finish:
-    lea msg_e820, %si
-    call print
-
 stage2:
     movb $0x41, %ah
     movw $0x55aa, %bx
     int $0x13
-    jne stage2.no41
+    jc stage2.no41
     call diskread
     jmp stage2.load
 stage2.no41:
     lea err_no41, %si
     call print
 stage2.load:
-    call .stage2_load_addr
+    .extern stage2_main
+    call stage2_main
     hlt
 
     .data
+    .extern _sboot
+    .extern _sboot2
 
-.extern _sboot
-.extern _sboot2
 .set .stage1_load_addr,     _sboot
 .set .stage2_load_addr,     _sboot2
 .set .drive,                0x80
-.global _multiboot_info_addr
-.global _e820_map_addr
-.set _multiboot_info_addr,  0x7000
-.set _e820_map_addr,        _multiboot_info_addr + 52
 
+    .global dapack
 .align 16
 dapack:
     .byte 0x10
