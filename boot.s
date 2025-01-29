@@ -91,6 +91,8 @@ _start:
     movw %si, %es
     movw %si, %ss
     movw $.stage1_load_addr, %sp
+    movw %sp, %bp
+
     sti
 
 a20:
@@ -127,9 +129,21 @@ stage2.no41:
     lea err_no41, %si
     call print
 stage2.load:
+    cli
+    cld
+stage2.gdt:
+    movw 4(%esp), %ax
+    movw %ax, gdt
+    movl 8(%esp), %eax
+    movl %eax, gdt+2
+    lgdt gdt
+
+    sti
     .extern stage2_main
     call stage2_main
-    hlt
+
+    .noreturn: hlt
+        jmp .noreturn
 
     .data
     .extern _sboot
@@ -139,8 +153,14 @@ stage2.load:
 .set .stage2_load_addr,     _sboot2
 .set .drive,                0x80
 
+    .global gdt
+gdt:
+    .quad 0
+    .quad 0x00cf9a000000ffff
+    .quad 0x00cf92000000ffff
+
     .global dapack
-.align 16
+    .align 16
 dapack:
     .byte 0x10
     .byte 0
@@ -153,7 +173,7 @@ dapack:
     .long 1
     .long 0
 
-.align 16
+    .align 16
 hex_buffer:   .space 5
 
 msg_hello:    .asciz "casinoboot: gambling with your hardrive\n\r"

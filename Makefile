@@ -1,5 +1,5 @@
 STAGE2_CC_ARGS := -g -fno-pic -fno-builtin -nostdlib -ffreestanding -std=gnu99 -m16 -march=i386 -e stage2_main 
-BOOT_OBJDUMP_ARGS := -b binary -Maddr16,data16 -m i386 
+BOOT_OBJDUMP_ARGS := -Maddr16,data16 -m i386 
 BUILD_DIR := build
 
 default: $(BUILD_DIR) $(BUILD_DIR)/diskimage.dd
@@ -13,7 +13,7 @@ $(BUILD_DIR)/boot.o: boot.s
 $(BUILD_DIR)/stage2.o: stage2.c
 	gcc $(STAGE2_CC_ARGS) -c $^ -o $@
 
-$(BUILD_DIR)/debug2.o: stage2.c
+$(BUILD_DIR)/debug2.o: stage2.c | $(BUILD_DIR)
 	gcc $(STAGE2_CC_ARGS) -c $^ -o $@
 	objdump $(BOOT_OBJDUMP_ARGS) -D $@
 
@@ -37,8 +37,7 @@ remote: $(BUILD_DIR)/diskimage.dd
 debug: $(BUILD_DIR)/diskimage.dd
 	gdb -ex "target remote localhost:1234"
 
-dump: $(BUILD_DIR)/diskimage.dd
-	objdump $(BOOT_OBJDUMP_ARGS) -D $@
+dump: $(BUILD_DIR)/debug2.o
 
 clean: $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)

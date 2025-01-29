@@ -45,13 +45,12 @@ void stage2_main() {
 	} else {
         for (int i = 0; i < entry_count; i++) {
             SMAP_entry_t* entry = &smap[i];
-            chexprint((int)entry);
-//          chexprint(entry->base_low);
-//          chexprint(entry->base_high);
-//          chexprint(entry->length_low);
-//          chexprint(entry->length_high);
-//          chexprint(entry->type);
-//          chexprint(entry->ACPI);
+            chexprint((int)&entry->base_low);
+            chexprint((int)&entry->base_high);
+            chexprint((int)&entry->length_low);
+            chexprint((int)&entry->length_high);
+            chexprint((int)&entry->type);
+            chexprint((int)&entry->ACPI);
         }
 	}
 }
